@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <artifactId>sn-scaffold</artifactId>
+        <groupId>com.bioelectronic</groupId>
+        <version>1.0.0</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+
+    <version>${mirai.version}</version>
+
+    <artifactId>sn-mirai-model</artifactId>
+
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-clean-plugin</artifactId>
+                    <configuration>
+                        <!--<skip>true</skip>-->
+                        <!--<failOnError>false</failOnError>-->
+                        <!--当配置true时,只清理filesets里的文件,构建目录中得文件不被清理.默认是flase.-->
+                        <excludeDefaultDirectories>false</excludeDefaultDirectories>
+                        <filesets>
+                            <fileset>
+                                <!--要清理的目录位置-->
+                                <directory>${sn-bot.dir}/</directory>
+                                <includes>
+                                    <include>*.jar</include>
+                                    <include>logs/</include>
+                                    <include>cache/</include>
+                                    <include>extension/</include>
+                                </includes>
+                            </fileset>
+                        </filesets>
+                    </configuration>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    </build>
+
+    <dependencies>
+        <dependency>
+            <groupId>net.mamoe</groupId>
+            <artifactId>mirai-logging-slf4j</artifactId>
+            <version>${mirai.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.apache.logging.log4j</groupId>
+                    <artifactId>log4j-to-slf4j</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.module</groupId>
+            <artifactId>jackson-module-kotlin</artifactId>
+            <version>${jackson.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.jetbrains.kotlin</groupId>
+                    <artifactId>kotlin-reflect</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.jetbrains.kotlin</groupId>
+                    <artifactId>kotlin-stdlib</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>net.mamoe</groupId>
+            <artifactId>mirai-core-jvm</artifactId>
+            <version>${mirai.version}</version>
+        </dependency>
+    </dependencies>
+
+
+    <properties>
+        <mirai.version>2.12.0</mirai.version>
+        <jackson.version>2.13.3</jackson.version>
+        <maven.compiler.source>8</maven.compiler.source>
+        <maven.compiler.target>8</maven.compiler.target>
+    </properties>
+
+
+</project>
