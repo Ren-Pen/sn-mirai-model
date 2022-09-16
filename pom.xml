@@ -13,35 +13,6 @@
 
     <artifactId>sn-mirai-model</artifactId>
 
-    <build>
-        <pluginManagement>
-            <plugins>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-clean-plugin</artifactId>
-                    <configuration>
-                        <!--<skip>true</skip>-->
-                        <!--<failOnError>false</failOnError>-->
-                        <!--当配置true时,只清理filesets里的文件,构建目录中得文件不被清理.默认是flase.-->
-                        <excludeDefaultDirectories>false</excludeDefaultDirectories>
-                        <filesets>
-                            <fileset>
-                                <!--要清理的目录位置-->
-                                <directory>${sn-bot.dir}/</directory>
-                                <includes>
-                                    <include>*.jar</include>
-                                    <include>logs/</include>
-                                    <include>cache/</include>
-                                    <include>extension/</include>
-                                </includes>
-                            </fileset>
-                        </filesets>
-                    </configuration>
-                </plugin>
-            </plugins>
-        </pluginManagement>
-    </build>
-
     <dependencies>
         <dependency>
             <groupId>net.mamoe</groupId>
