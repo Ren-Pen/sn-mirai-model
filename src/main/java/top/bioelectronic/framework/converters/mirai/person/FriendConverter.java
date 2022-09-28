@@ -1,10 +1,10 @@
 package top.bioelectronic.framework.converters.mirai.person;
 
 import net.mamoe.mirai.contact.Friend;
-import top.bioelectronic.framework.converters.mirai.MiraiRobot;
+import top.bioelectronic.framework.contact.user.MiraiFriendImpl;
+import top.bioelectronic.framework.MiraiRobot;
 import top.bioelectronic.sdk.framework.converters.Converter;
 import top.bioelectronic.sdk.robot.contact.user.SNFriend;
-import top.bioelectronic.sdk.robot.contact.user.SNFriendImpl;
 import top.bioelectronic.sdk.robot.contact.user.SNUserProfile;
 
 public class FriendConverter extends Converter<Friend, SNFriend, MiraiRobot> {
@@ -22,7 +22,7 @@ public class FriendConverter extends Converter<Friend, SNFriend, MiraiRobot> {
                 friend.queryProfile(),
                 SNUserProfile.class);
 
-        return new SNFriendImpl(
+        return new MiraiFriendImpl(
                 friend.getId(),
                 profile,
                 friend.getNick(),

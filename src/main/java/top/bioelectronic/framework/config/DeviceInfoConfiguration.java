@@ -1,4 +1,4 @@
-package top.bioelectronic.framework.converters.mirai.config;
+package top.bioelectronic.framework.config;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.AllArgsConstructor;

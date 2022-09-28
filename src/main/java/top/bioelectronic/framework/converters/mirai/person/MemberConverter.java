@@ -4,13 +4,13 @@ import net.mamoe.mirai.contact.AnonymousMember;
 import net.mamoe.mirai.contact.Group;
 import net.mamoe.mirai.contact.Member;
 import net.mamoe.mirai.contact.NormalMember;
-import top.bioelectronic.framework.converters.mirai.MiraiRobot;
+import top.bioelectronic.framework.contact.user.MiraiAnonymousMemberImpl;
+import top.bioelectronic.framework.contact.user.MiraiNormalMemberImpl;
+import top.bioelectronic.framework.MiraiRobot;
 import top.bioelectronic.sdk.framework.converters.Converter;
 import top.bioelectronic.sdk.robot.contact.SNGroup;
 import top.bioelectronic.sdk.robot.contact.SNMemberPermission;
-import top.bioelectronic.sdk.robot.contact.user.SNAnonymousMemberImpl;
 import top.bioelectronic.sdk.robot.contact.user.SNMember;
-import top.bioelectronic.sdk.robot.contact.user.SNNormalMemberImpl;
 import top.bioelectronic.sdk.robot.contact.user.SNUserProfile;
 
 public class MemberConverter extends Converter<Member, SNMember, MiraiRobot> {
@@ -20,7 +20,7 @@ public class MemberConverter extends Converter<Member, SNMember, MiraiRobot> {
 
 
         if (member instanceof AnonymousMember) {
-            return new SNAnonymousMemberImpl(
+            return new MiraiAnonymousMemberImpl(
                     member.getId(),
                     converters.convert(member.queryProfile(), SNUserProfile.class),
                     converters.convert(member.getGroup(), SNGroup.class),
@@ -31,7 +31,7 @@ public class MemberConverter extends Converter<Member, SNMember, MiraiRobot> {
         } else {
 
 
-            return new SNNormalMemberImpl(member.getId(),
+            return new MiraiNormalMemberImpl(member.getId(),
                     converters.convert(member.queryProfile(), SNUserProfile.class),
                     converters.convert(member.getGroup(), SNGroup.class),
                     member.getSpecialTitle(),

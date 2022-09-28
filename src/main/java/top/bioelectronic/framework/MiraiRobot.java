@@ -1,4 +1,4 @@
-package top.bioelectronic.framework.converters.mirai;
+package top.bioelectronic.framework;
 
 import kotlin.coroutines.CoroutineContext;
 import lombok.Getter;
@@ -19,7 +19,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.tika.mime.MimeTypeException;
 import org.apache.tika.mime.MimeTypes;
 import org.jetbrains.annotations.NotNull;
-import top.bioelectronic.framework.converters.mirai.config.DeviceInfoConfiguration;
+import top.bioelectronic.framework.config.DeviceInfoConfiguration;
 import top.bioelectronic.framework.core.BaseRobot;
 import top.bioelectronic.framework.event.impl.bot.LoginEvent;
 import top.bioelectronic.sdk.access.Access;
@@ -56,7 +56,7 @@ public class MiraiRobot extends BaseRobot {
         log.info("注意 您正在使用 sn-mirai 模块，仅供学习交流使用，严禁用于商业用途");
         log.info("关于 mirai 是一个在全平台下运行，提供 QQ Android 协议支持的高效率机器人库");
         log.info("项目地址 https://github.com/mamoe/mirai");
-        log.info("开源许可 \n\n============================================================\n{}\n============================================================\n", "Copyright (C) 2019-2022 Mamoe Technologies and contributors.\n" +
+        log.info("LICENSES \n\n============================================================\n{}\n============================================================\n", "Copyright (C) 2019-2022 Mamoe Technologies and contributors.\n" +
                 "\n" +
                 "This program is free software: you can redistribute it and/or modify\n" +
                 "it under the terms of the GNU Affero General Public License as\n" +

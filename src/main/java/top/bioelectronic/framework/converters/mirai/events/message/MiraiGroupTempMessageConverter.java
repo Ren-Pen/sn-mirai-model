@@ -1,7 +1,7 @@
 package top.bioelectronic.framework.converters.mirai.events.message;
 
 import net.mamoe.mirai.event.events.GroupTempMessageEvent;
-import top.bioelectronic.framework.converters.mirai.MiraiRobot;
+import top.bioelectronic.framework.MiraiRobot;
 import top.bioelectronic.sdk.framework.converters.Converter;
 import top.bioelectronic.sdk.robot.contact.user.SNMember;
 import top.bioelectronic.sdk.robot.events.messages.SNGroupTempMessageEvent;

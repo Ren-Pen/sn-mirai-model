@@ -1,10 +1,10 @@
 package top.bioelectronic.framework.converters.mirai.person;
 
 import net.mamoe.mirai.contact.Group;
-import top.bioelectronic.framework.converters.mirai.MiraiRobot;
+import top.bioelectronic.framework.contact.MiraiGroupImpl;
+import top.bioelectronic.framework.MiraiRobot;
 import top.bioelectronic.sdk.framework.converters.Converter;
 import top.bioelectronic.sdk.robot.contact.SNGroup;
-import top.bioelectronic.sdk.robot.contact.SNGroupImpl;
 import top.bioelectronic.sdk.robot.contact.SNMemberPermission;
 
 public class GroupConverter extends Converter<Group, SNGroup, MiraiRobot> {
@@ -12,7 +12,7 @@ public class GroupConverter extends Converter<Group, SNGroup, MiraiRobot> {
     public SNGroup convert(Group group) {
         if (group == null) return null;
 
-        return new SNGroupImpl(
+        return new MiraiGroupImpl(
                 group.getId(),
                 group.getName(),
                 group.getAvatarUrl(),

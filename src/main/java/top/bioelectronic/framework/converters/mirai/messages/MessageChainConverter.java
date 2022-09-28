@@ -4,7 +4,7 @@ import net.mamoe.mirai.message.data.Message;
 import net.mamoe.mirai.message.data.MessageChain;
 import net.mamoe.mirai.message.data.MessageChainBuilder;
 import net.mamoe.mirai.message.data.SingleMessage;
-import top.bioelectronic.framework.converters.mirai.MiraiRobot;
+import top.bioelectronic.framework.MiraiRobot;
 import top.bioelectronic.sdk.framework.converters.Converter;
 import top.bioelectronic.sdk.robot.messages.SNMessage;
 import top.bioelectronic.sdk.robot.messages.SNMessageChain;

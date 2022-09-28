@@ -1,17 +1,17 @@
 package top.bioelectronic.framework.converters.mirai.person;
 
 import net.mamoe.mirai.data.UserProfile;
-import top.bioelectronic.framework.converters.mirai.MiraiRobot;
+import top.bioelectronic.framework.contact.user.MiraiUserProfileImpl;
+import top.bioelectronic.framework.MiraiRobot;
 import top.bioelectronic.sdk.framework.converters.Converter;
 import top.bioelectronic.sdk.robot.contact.user.SNUserProfile;
-import top.bioelectronic.sdk.robot.contact.user.SNUserProfileImpl;
 
 public class UserProfileConverter extends Converter<UserProfile, SNUserProfile, MiraiRobot> {
 
     @Override
     public SNUserProfile convert(UserProfile userProfile) {
 
-        return new SNUserProfileImpl(
+        return new MiraiUserProfileImpl(
                 userProfile.getNickname(),
                 userProfile.getEmail(),
                 userProfile.getAge(),

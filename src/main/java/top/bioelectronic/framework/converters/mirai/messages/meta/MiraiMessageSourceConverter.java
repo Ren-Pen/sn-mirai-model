@@ -1,7 +1,7 @@
 package top.bioelectronic.framework.converters.mirai.messages.meta;
 
 import net.mamoe.mirai.message.data.*;
-import top.bioelectronic.framework.converters.mirai.MiraiRobot;
+import top.bioelectronic.framework.MiraiRobot;
 import top.bioelectronic.sdk.framework.converters.Converter;
 import top.bioelectronic.sdk.robot.messages.SNMessageChain;
 import top.bioelectronic.sdk.robot.messages.meta.SNMessageSource;

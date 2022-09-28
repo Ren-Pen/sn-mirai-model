@@ -1,6 +1,6 @@
 package top.bioelectronic.framework.converters.mirai.messages.meta;
 
-import top.bioelectronic.framework.converters.mirai.MiraiRobot;
+import top.bioelectronic.framework.MiraiRobot;
 import net.mamoe.mirai.message.data.MessageSource;
 import net.mamoe.mirai.message.data.QuoteReply;
 import top.bioelectronic.sdk.framework.converters.Converter;

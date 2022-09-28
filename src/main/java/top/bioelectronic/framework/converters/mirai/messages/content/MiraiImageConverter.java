@@ -2,7 +2,7 @@ package top.bioelectronic.framework.converters.mirai.messages.content;
 
 import lombok.extern.slf4j.Slf4j;
 import net.mamoe.mirai.message.data.Image;
-import top.bioelectronic.framework.converters.mirai.MiraiRobot;
+import top.bioelectronic.framework.MiraiRobot;
 import top.bioelectronic.sdk.framework.converters.Converter;
 import top.bioelectronic.sdk.robot.messages.content.SNImage;
 
