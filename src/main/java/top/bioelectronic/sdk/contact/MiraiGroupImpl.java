@@ -1,4 +1,4 @@
-package top.bioelectronic.framework.contact;
+package top.bioelectronic.sdk.contact;
 
 import top.bioelectronic.sdk.core.Robot;
 import top.bioelectronic.sdk.robot.contact.SNGroup;
@@ -28,5 +28,20 @@ public class MiraiGroupImpl implements SNGroup {
     @Override
     public SNMessageSource sendMessage(Robot robot, SNMessageChain chain) {
         return robot.sendMessage(this, chain);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        MiraiGroupImpl that = (MiraiGroupImpl) o;
+
+        return id == that.id;
+    }
+
+    @Override
+    public int hashCode() {
+        return (int) (id ^ (id >>> 32));
     }
 }

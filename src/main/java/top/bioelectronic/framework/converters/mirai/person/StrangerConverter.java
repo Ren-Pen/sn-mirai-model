@@ -1,7 +1,7 @@
 package top.bioelectronic.framework.converters.mirai.person;
 
 import net.mamoe.mirai.contact.Stranger;
-import top.bioelectronic.framework.contact.user.MiraiStrangerImpl;
+import top.bioelectronic.sdk.contact.user.MiraiStrangerImpl;
 import top.bioelectronic.framework.MiraiRobot;
 import top.bioelectronic.sdk.framework.converters.Converter;
 import top.bioelectronic.sdk.robot.contact.user.SNStranger;

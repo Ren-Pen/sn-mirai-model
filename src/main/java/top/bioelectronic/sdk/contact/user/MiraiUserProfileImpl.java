@@ -1,4 +1,4 @@
-package top.bioelectronic.framework.contact.user;
+package top.bioelectronic.sdk.contact.user;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

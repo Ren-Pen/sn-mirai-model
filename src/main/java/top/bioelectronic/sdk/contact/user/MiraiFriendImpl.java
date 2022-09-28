@@ -1,4 +1,4 @@
-package top.bioelectronic.framework.contact.user;
+package top.bioelectronic.sdk.contact.user;
 
 import lombok.Getter;
 import top.bioelectronic.sdk.core.Robot;

@@ -1,4 +1,4 @@
-package top.bioelectronic.framework.contact.user;
+package top.bioelectronic.sdk.contact.user;
 
 import lombok.Getter;
 import top.bioelectronic.sdk.robot.contact.SNGroup;
@@ -22,5 +22,21 @@ public abstract class MiraiMemberImpl extends MiraiUserImpl implements SNMember 
         this.permission = permission;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        if (!super.equals(o)) return false;
 
+        MiraiMemberImpl that = (MiraiMemberImpl) o;
+
+        return group.equals(that.group);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = super.hashCode();
+        result = 31 * result + group.hashCode();
+        return result;
+    }
 }

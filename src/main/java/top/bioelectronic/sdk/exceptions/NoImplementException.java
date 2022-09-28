@@ -1,4 +1,4 @@
-package top.bioelectronic.framework.exceptions;
+package top.bioelectronic.sdk.exceptions;
 
 public class NoImplementException extends MiraiException {
     public NoImplementException() {

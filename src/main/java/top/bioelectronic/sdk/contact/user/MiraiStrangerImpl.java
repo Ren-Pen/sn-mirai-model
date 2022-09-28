@@ -1,4 +1,4 @@
-package top.bioelectronic.framework.contact.user;
+package top.bioelectronic.sdk.contact.user;
 
 import top.bioelectronic.sdk.core.Robot;
 import top.bioelectronic.sdk.robot.contact.user.SNStranger;
