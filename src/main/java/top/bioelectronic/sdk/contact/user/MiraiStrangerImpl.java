@@ -16,4 +16,8 @@ public class MiraiStrangerImpl extends MiraiUserImpl implements SNStranger {
         return robot.sendMessage(this, chain);
     }
 
+    @Override
+    public void nudge(Robot robot) {
+        robot.nudge(this, this);
+    }
 }

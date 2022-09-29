@@ -39,7 +39,8 @@ public class MemberConverter extends Converter<Member, SNMember, MiraiRobot> {
                     SNMemberPermission.valueOf(member.getPermission().toString()),
                     ((NormalMember) member).getJoinTimestamp(),
                     ((NormalMember) member).getLastSpeakTimestamp(),
-                    ((NormalMember) member).getMuteTimeRemaining());
+                    ((NormalMember) member).getMuteTimeRemaining(),
+                    ((NormalMember) member).isMuted());
         }
 
     }

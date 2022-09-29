@@ -10,7 +10,10 @@ import net.mamoe.mirai.event.Event;
 import net.mamoe.mirai.event.EventHandler;
 import net.mamoe.mirai.event.ListeningStatus;
 import net.mamoe.mirai.event.SimpleListenerHost;
-import net.mamoe.mirai.message.data.*;
+import net.mamoe.mirai.message.data.Image;
+import net.mamoe.mirai.message.data.ImageType;
+import net.mamoe.mirai.message.data.MessageChain;
+import net.mamoe.mirai.message.data.MessageSource;
 import net.mamoe.mirai.utils.BotConfiguration;
 import net.mamoe.mirai.utils.ExternalResource;
 import org.apache.commons.codec.digest.DigestUtils;
@@ -22,34 +25,38 @@ import org.jetbrains.annotations.NotNull;
 import top.bioelectronic.framework.config.DeviceInfoConfiguration;
 import top.bioelectronic.framework.core.BaseRobot;
 import top.bioelectronic.framework.event.impl.bot.LoginEvent;
-import top.bioelectronic.sdk.access.Access;
 import top.bioelectronic.sdk.common.Nullable;
 import top.bioelectronic.sdk.event.IEvent;
-import top.bioelectronic.sdk.framework.annotations.AccessControl;
 import top.bioelectronic.sdk.framework.annotations.Mount;
 import top.bioelectronic.sdk.logger.Marker;
 import top.bioelectronic.sdk.robot.contact.SNContact;
 import top.bioelectronic.sdk.robot.contact.SNGroup;
-import top.bioelectronic.sdk.robot.contact.user.SNFriend;
-import top.bioelectronic.sdk.robot.contact.user.SNMember;
-import top.bioelectronic.sdk.robot.contact.user.SNNormalMember;
-import top.bioelectronic.sdk.robot.contact.user.SNStranger;
+import top.bioelectronic.sdk.robot.contact.user.*;
 import top.bioelectronic.sdk.robot.messages.SNMessageChain;
 import top.bioelectronic.sdk.robot.messages.content.SNImage;
 import top.bioelectronic.sdk.robot.messages.meta.SNMessageSource;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import static top.bioelectronic.framework.event.impl.bot.LoginEvent.*;
+import static top.bioelectronic.framework.event.impl.bot.LoginEvent.INFO;
+import static top.bioelectronic.framework.event.impl.bot.LoginEvent.WARN;
 
 @Marker("MIRAI")
 @Slf4j
 public class MiraiRobot extends BaseRobot {
+
+    private static final File cache = new File("cache/");
+    @Mount
+    protected DeviceInfoConfiguration deviceInfoConfiguration;
+    @Getter
+    private Bot bot = null;
 
     @Override
     public void onLoad() throws Exception {
@@ -72,14 +79,6 @@ public class MiraiRobot extends BaseRobot {
                 "along with this program.  If not, see <http://www.gnu.org/licenses/>.");
     }
 
-    private static final File cache = new File("cache/");
-
-    @Getter
-    private Bot bot = null;
-
-    @Mount
-    protected DeviceInfoConfiguration deviceInfoConfiguration;
-
     @Override
     protected boolean getStatus() {
         return bot != null && bot.isOnline();
@@ -87,7 +86,7 @@ public class MiraiRobot extends BaseRobot {
 
     @Override
     protected synchronized void initInstance() {
-        if (bot == null){
+        if (bot == null) {
 
             final BotConfiguration configuration = new BotConfiguration();
             configuration.loadDeviceInfoJson(deviceInfoConfiguration.toString());
@@ -131,7 +130,7 @@ public class MiraiRobot extends BaseRobot {
     /**
      * 登录到qq
      */
-    public void toLogin() throws Exception{
+    public void toLogin() throws Exception {
         bot.login();
     }
 
@@ -143,9 +142,8 @@ public class MiraiRobot extends BaseRobot {
     }
 
     @Override
-    @AccessControl(require = {Access.TEST})
     public void test() {
-        System.out.println(robotConfiguration);
+        log.info("MIRAI TEST SUCCESS!");
     }
 
     private SNMessageSource sendMessage(SNContact contact, SNMessageChain chain) {
@@ -160,7 +158,7 @@ public class MiraiRobot extends BaseRobot {
         MessageChain messages = converters.reverseConvert(chain, MessageChain.class);
         try {
             return converters.convert(mc.sendMessage(messages).getSource(), SNMessageSource.class);
-        } catch (Throwable t) {
+        } catch (Exception t) {
             log.warn("发送消息失败！目标：{}，消息链：{}，详情请检查日志！", mc, messages);
             log.debug("发送消息失败！目标：{}，消息链：{}\n", mc, messages, t);
             return null;
@@ -168,57 +166,48 @@ public class MiraiRobot extends BaseRobot {
     }
 
     @Override
-    @AccessControl(require = {Access.SEND_FRIEND})
     public SNMessageSource sendMessage(SNFriend friend, SNMessageChain chain) {
         return sendMessage((SNContact) friend, chain);
     }
 
     @Override
-    @AccessControl(require = {Access.SEND_GROUP})
     public SNMessageSource sendMessage(SNGroup group, SNMessageChain chain) {
         return sendMessage((SNContact) group, chain);
     }
 
     @Override
-    @AccessControl(require = {Access.SEND_STRANGER})
     public SNMessageSource sendMessage(SNStranger stranger, SNMessageChain chain) {
         return sendMessage((SNContact) stranger, chain);
     }
 
     @Override
-    @AccessControl(require = {Access.SEND_GROUP_MEMBER})
     public SNMessageSource sendMessage(SNNormalMember member, SNMessageChain chain) {
         return sendMessage((SNContact) member, chain);
     }
 
     @Override
-    @AccessControl(require = {Access.GET_FRIEND})
     public SNFriend getFriend(long friendId) {
         if (friendId == 0L) return null;
         return converters.convert(bot.getFriend(friendId), SNFriend.class);
     }
 
     @Override
-    @AccessControl(require = {Access.GET_GROUP})
     public SNGroup getGroup(long groupId) {
         if (groupId == 0L) return null;
         return converters.convert(bot.getGroup(groupId), SNGroup.class);
     }
 
     @Override
-    @AccessControl(require = {Access.GET_GROUP_MEMBER})
     public SNMember getGroupMember(SNGroup group, long memberId) {
         return converters.convert(converters.reverseConvert(group, Group.class).get(memberId), SNMember.class);
     }
 
     @Override
-    @AccessControl(require = {Access.GET_STRANGER})
     public SNStranger getStranger(long strangerId) {
         return converters.convert(bot.getStranger(strangerId), SNStranger.class);
     }
 
     @Override
-    @AccessControl(require = Access.GET_FRIENDS)
     public List<SNFriend> getFriendList() {
         ContactList<Friend> friends = bot.getFriends();
         List<SNFriend> result = new ArrayList<>(friends.size());
@@ -227,7 +216,6 @@ public class MiraiRobot extends BaseRobot {
     }
 
     @Override
-    @AccessControl(require = Access.GET_GROUPS)
     public List<SNGroup> getGroupsList() {
         ContactList<Group> groups = bot.getGroups();
         List<SNGroup> result = new ArrayList<>(groups.size());
@@ -237,7 +225,6 @@ public class MiraiRobot extends BaseRobot {
 
     @Override
     @Nullable
-    @AccessControl(require = Access.GET_GROUP_MEMBERS)
     public List<SNMember> getGroupMembers(SNGroup group) {
         Group mg = converters.reverseConvert(group, Group.class);
         if (mg == null) return null;
@@ -248,13 +235,11 @@ public class MiraiRobot extends BaseRobot {
     }
 
     @Override
-    @AccessControl(require = Access.BEHAVIOR_GET_BOT_ID)
     public long getBotId() {
         return bot.getId();
     }
 
     @Override
-    @AccessControl(require = Access.BEHAVIOR_IMG_UPLOAD)
     public SNImage uploadImg(@NotNull File file) throws IOException {
         // 文件存在，计算md5，获取图片id
         String md5;
@@ -291,15 +276,14 @@ public class MiraiRobot extends BaseRobot {
             }
             if (contact == null) throw new IOException("No contact to upload!");
 
-            try(ExternalResource resource = ExternalResource.create(file)){
-                return converters.convert(Contact.uploadImage(contact,resource), SNImage.class);
+            try (ExternalResource resource = ExternalResource.create(file)) {
+                return converters.convert(Contact.uploadImage(contact, resource), SNImage.class);
             }
 
         }
     }
 
     @Override
-    @AccessControl(require = Access.BEHAVIOR_IMG_UPLOAD)
     public SNImage uploadImg(@NotNull URL url, boolean forceUpdate) throws IOException {
         HttpURLConnection conn = null;
         try {
@@ -318,7 +302,7 @@ public class MiraiRobot extends BaseRobot {
                 }
             }
             File cacheFile = new File(urlDir + File.separator + fileName);
-            if (forceUpdate){
+            if (forceUpdate) {
                 cacheFile.delete();
             }
             if (!cacheFile.exists()) {
@@ -336,22 +320,68 @@ public class MiraiRobot extends BaseRobot {
     }
 
     @Override
-    @AccessControl(require = Access.BEHAVIOR_IMG_UPLOAD)
     public SNImage uploadImg(@NotNull URL url) throws IOException {
         return uploadImg(url, false);
     }
 
     @Override
-    @AccessControl(require = Access.BEHAVIOR_RECALL)
-    public boolean recall(SNMessageSource source){
+    public boolean recall(SNMessageSource source) {
         try {
             MessageSource.recall(converters.reverseConvert(source, MessageSource.class));
-        }catch (Exception e){
-            log.error("撤回消息失败", e);
+        } catch (Exception e) {
+            log.warn("撤回消息失败！时间戳：{}，消息链：{}，详情请检查日志！", source.getTime(), source.getOriginalMessage());
+            log.debug("撤回消息失败！时间戳：{}，消息链：{}\n", source.getTime(), source.getOriginalMessage(), e);
             return false;
         }
         return true;
 
+    }
+
+    @Override
+    public boolean mute(SNMember member, int durationSeconds) {
+
+        Member m = converters.reverseConvert(member, Member.class);
+        try {
+            m.mute(durationSeconds);
+        } catch (Exception e) {
+            log.warn("禁言失败！群组：{}，目标：{}，时间：{}，详情请检查日志！", member.getGroup().getId(), member.getId(), durationSeconds);
+            log.debug("禁言失败！群组：{}，目标：{}，时间：{}\n", member.getGroup().getId(), member.getId(), durationSeconds, e);
+            return false;
+        }
+        return true;
+    }
+
+    @Override
+    public boolean unmute(SNNormalMember member) {
+        NormalMember m = converters.reverseConvert(member, NormalMember.class);
+        try {
+            m.unmute();
+        } catch (Exception e) {
+            log.warn("解除禁言失败！群组：{}，目标：{}，详情请检查日志！", member.getGroup().getId(), member.getId());
+            log.debug("解除禁言失败！群组：{}，目标：{}\n", member.getGroup().getId(), member.getId(), e);
+            return false;
+        }
+        return true;
+    }
+
+    @Override
+    public void nudge(SNUser target, SNContact sendTo) {
+        User user = converters.reverseConvert(target, User.class);
+        Contact contact = converters.reverseConvert(sendTo, Contact.class);
+        user.nudge().sendTo(contact);
+    }
+
+    @Override
+    public boolean kick(SNNormalMember member, String message, boolean block) {
+        NormalMember m = converters.reverseConvert(member, NormalMember.class);
+        try{
+            m.kick(message, block);
+        } catch (Exception e){
+            log.warn("踢出群成员失败！群组：{}，目标：{}，详情请检查日志！", member.getGroup().getId(), member.getId());
+            log.debug("踢出群成员失败！群组：{}，目标：{}\n", member.getGroup().getId(), member.getId(), e);
+            return false;
+        }
+        return true;
     }
 
     @Override

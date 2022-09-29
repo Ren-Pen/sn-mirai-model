@@ -42,4 +42,9 @@ public class MiraiAnonymousMemberImpl extends MiraiMemberImpl implements SNAnony
         result = 31 * result + anonymousId.hashCode();
         return result;
     }
+
+    @Override
+    public void nudge(Robot robot) {
+        throw new NoImplementException("不能向匿名群成员发送戳一戳！");
+    }
 }

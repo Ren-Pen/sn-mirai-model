@@ -14,12 +14,14 @@ public class MiraiNormalMemberImpl extends MiraiMemberImpl implements SNNormalMe
     private final int muteTimeRemaining;
     private final int lastSpeakTimestamp;
     private final int joinTimestamp;
+    private final boolean isMute;
 
-    public MiraiNormalMemberImpl(long id, SNUserProfile profile, SNGroup group, String specialTitle, String nameCard, SNMemberPermission permission, int joinTimestamp, int lastSpeakTimestamp, int muteTimeRemaining) {
+    public MiraiNormalMemberImpl(long id, SNUserProfile profile, SNGroup group, String specialTitle, String nameCard, SNMemberPermission permission, int joinTimestamp, int lastSpeakTimestamp, int muteTimeRemaining, boolean isMute) {
         super(id, profile, group, specialTitle, nameCard, permission);
         this.joinTimestamp = joinTimestamp;
         this.lastSpeakTimestamp = lastSpeakTimestamp;
         this.muteTimeRemaining = muteTimeRemaining;
+        this.isMute = isMute;
     }
 
     @Override
@@ -27,4 +29,8 @@ public class MiraiNormalMemberImpl extends MiraiMemberImpl implements SNNormalMe
         return robot.sendMessage(this, chain);
     }
 
+    @Override
+    public void nudge(Robot robot) {
+        robot.nudge(this, this.getGroup());
+    }
 }

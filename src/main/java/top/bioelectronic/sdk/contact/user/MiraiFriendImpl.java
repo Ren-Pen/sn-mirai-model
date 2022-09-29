@@ -34,4 +34,9 @@ public class MiraiFriendImpl extends MiraiUserImpl implements SNFriend {
     public SNMessageSource sendMessage(Robot robot, SNMessageChain chain) {
         return robot.sendMessage(this, chain);
     }
+
+    @Override
+    public void nudge(Robot robot) {
+        robot.nudge(this, this);
+    }
 }
