@@ -3,15 +3,16 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
-        <artifactId>sn-scaffold</artifactId>
-        <groupId>top.bioelectronic</groupId>
+        <artifactId>slimenano-scaffold</artifactId>
+        <groupId>com.slimenano</groupId>
         <version>1.0.0</version>
+        <relativePath>parent-pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
     <version>${mirai.version}</version>
 
-    <artifactId>sn-mirai-model</artifactId>
+    <artifactId>slimenano-mirai-model</artifactId>
 
     <dependencies>
         <dependency>
