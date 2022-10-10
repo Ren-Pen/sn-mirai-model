@@ -67,11 +67,6 @@ public class DeviceInfoConfiguration implements DefaultConfiguration {
     // apn 填 wifi
     private String apn = "wifi";
 
-    @Override
-    public DefaultConfiguration createDefaultConfigurationObject() {
-        return new DeviceInfoConfiguration();
-    }
-
     @SneakyThrows
     @Override
     public String toString() {
