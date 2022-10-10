@@ -1,5 +1,21 @@
 package com.slimenano.framework;
 
+import com.slimenano.framework.converters.mirai.MyLoginSolver;
+import com.slimenano.framework.core.BaseRobot;
+import com.slimenano.framework.event.impl.bot.LoginEvent;
+import com.slimenano.sdk.common.Nullable;
+import com.slimenano.sdk.event.IEvent;
+import com.slimenano.sdk.framework.annotations.Mount;
+import com.slimenano.sdk.logger.Marker;
+import com.slimenano.sdk.robot.contact.SNContact;
+import com.slimenano.sdk.robot.contact.SNGroup;
+import com.slimenano.sdk.robot.contact.user.*;
+import com.slimenano.sdk.robot.exception.InternalModelFailedException;
+import com.slimenano.sdk.robot.exception.LoginFailedException;
+import com.slimenano.sdk.robot.exception.ServerFailedException;
+import com.slimenano.sdk.robot.messages.SNMessageChain;
+import com.slimenano.sdk.robot.messages.content.SNImage;
+import com.slimenano.sdk.robot.messages.meta.SNMessageSource;
 import kotlin.coroutines.CoroutineContext;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -14,6 +30,9 @@ import net.mamoe.mirai.message.data.Image;
 import net.mamoe.mirai.message.data.ImageType;
 import net.mamoe.mirai.message.data.MessageChain;
 import net.mamoe.mirai.message.data.MessageSource;
+import net.mamoe.mirai.network.NoServerAvailableException;
+import net.mamoe.mirai.network.RetryLaterException;
+import net.mamoe.mirai.network.WrongPasswordException;
 import net.mamoe.mirai.utils.BotConfiguration;
 import net.mamoe.mirai.utils.ExternalResource;
 import org.apache.commons.codec.digest.DigestUtils;
@@ -22,19 +41,6 @@ import org.apache.commons.io.IOUtils;
 import org.apache.tika.mime.MimeTypeException;
 import org.apache.tika.mime.MimeTypes;
 import org.jetbrains.annotations.NotNull;
-import com.slimenano.framework.config.DeviceInfoConfiguration;
-import com.slimenano.framework.core.BaseRobot;
-import com.slimenano.framework.event.impl.bot.LoginEvent;
-import com.slimenano.sdk.common.Nullable;
-import com.slimenano.sdk.event.IEvent;
-import com.slimenano.sdk.framework.annotations.Mount;
-import com.slimenano.sdk.logger.Marker;
-import com.slimenano.sdk.robot.contact.SNContact;
-import com.slimenano.sdk.robot.contact.SNGroup;
-import com.slimenano.sdk.robot.contact.user.*;
-import com.slimenano.sdk.robot.messages.SNMessageChain;
-import com.slimenano.sdk.robot.messages.content.SNImage;
-import com.slimenano.sdk.robot.messages.meta.SNMessageSource;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -45,7 +51,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import static com.slimenano.framework.event.impl.bot.LoginEvent.INFO;
 import static com.slimenano.framework.event.impl.bot.LoginEvent.WARN;
 
 @Marker("MIRAI")
@@ -53,10 +58,12 @@ import static com.slimenano.framework.event.impl.bot.LoginEvent.WARN;
 public class MiraiRobot extends BaseRobot {
 
     private static final File cache = new File("cache/");
-    @Mount
-    protected DeviceInfoConfiguration deviceInfoConfiguration;
+
     @Getter
     private Bot bot = null;
+
+    @Mount
+    private MyLoginSolver myLoginSolver;
 
     @Override
     public void onLoad() throws Exception {
@@ -84,55 +91,59 @@ public class MiraiRobot extends BaseRobot {
         return bot != null && bot.isOnline();
     }
 
-    @Override
-    protected synchronized void initInstance() {
-        if (bot != null) {
-            bot.close();
-        }
-        bot = null;
-        final BotConfiguration configuration = new BotConfiguration();
-        configuration.loadDeviceInfoJson(deviceInfoConfiguration.toString());
-        eventChannel.post(new LoginEvent("已获取设备配置", INFO));
-        configuration.noBotLog();
-        configuration.autoReconnectOnForceOffline();
-        try {
-            configuration.setProtocol(BotConfiguration.MiraiProtocol.valueOf(robotConfiguration.getProtocol()));
-        } catch (IllegalArgumentException e) {
-            log.warn("MIRAI | {} 不是一个合法的登录协议名. 程序将使用默认的协议(MACOS). 支持的协议列表: {}",
-                    robotConfiguration.getProtocol(),
-                    Arrays.toString(BotConfiguration.MiraiProtocol.values())
-            );
-            eventChannel.post(new LoginEvent(robotConfiguration.getProtocol() + "不是一个合法的登录协议名. 程序将使用默认的协议(MACOS). ", WARN));
-            configuration.setProtocol(BotConfiguration.MiraiProtocol.MACOS);
-            robotConfiguration.setProtocol(BotConfiguration.MiraiProtocol.MACOS.name());
-            try {
-                context.storeConfiguration();
-            } catch (IOException ex) {
-                log.error("MIRAI | 保存配置时出现错误", ex);
-            }
-        }
-        bot = BotFactory.INSTANCE.newBot(robotConfiguration.getAccount(), robotConfiguration.getPassword(), configuration);
-        bot.getEventChannel().registerListenerHost(new SimpleListenerHost() {
-            @Override
-            public void handleException(@NotNull CoroutineContext context, @NotNull Throwable exception) {
-                super.handleException(context, exception);
-            }
-
-            @EventHandler
-            public ListeningStatus onEvent(Event event) {
-                eventChannel.post(converters.convert(event, IEvent.class));
-                return ListeningStatus.LISTENING;
-            }
-        });
-
-
-    }
-
     /**
      * 登录到qq
      */
-    public void toLogin() throws Exception {
-        bot.login();
+    public void toLogin(long id, String password, String protocal) throws LoginFailedException {
+        try {
+            if (bot != null) {
+                bot.close();
+            }
+            bot = null;
+            final BotConfiguration configuration = new BotConfiguration();
+            configuration.fileBasedDeviceInfo("data/device.json");
+            configuration.noBotLog();
+            configuration.noNetworkLog();
+            configuration.autoReconnectOnForceOffline();
+            configuration.setLoginSolver(myLoginSolver);
+            try {
+                configuration.setProtocol(BotConfiguration.MiraiProtocol.valueOf(protocal));
+            } catch (IllegalArgumentException e) {
+                log.warn("{} 不是一个合法的登录协议名. 程序将使用默认的协议(MACOS). 支持的协议列表: {}",
+                        protocal,
+                        Arrays.toString(BotConfiguration.MiraiProtocol.values())
+                );
+                eventChannel.post(new LoginEvent(protocal + "不是一个合法的登录协议名. 程序将使用默认的协议(MACOS). ", WARN));
+                configuration.setProtocol(BotConfiguration.MiraiProtocol.MACOS);
+                try {
+                    context.storeConfiguration();
+                } catch (IOException ex) {
+                    log.error("保存配置时出现错误", ex);
+                }
+            }
+
+            bot = BotFactory.INSTANCE.newBot(id, password, configuration);
+            bot.getEventChannel().registerListenerHost(new SimpleListenerHost() {
+                @Override
+                public void handleException(@NotNull CoroutineContext context, @NotNull Throwable exception) {
+                    super.handleException(context, exception);
+                }
+
+                @EventHandler
+                public ListeningStatus onEvent(Event event) {
+                    eventChannel.post(converters.convert(event, IEvent.class));
+                    return ListeningStatus.LISTENING;
+                }
+            });
+
+            bot.login();
+        } catch (WrongPasswordException e) {
+            throw new com.slimenano.sdk.robot.exception.WrongPasswordException(e.getMessage());
+        } catch (NoServerAvailableException | RetryLaterException e) {
+            throw new ServerFailedException(e.getMessage());
+        } catch (Exception e) {
+            throw new InternalModelFailedException(e.getMessage());
+        }
     }
 
     @Override
@@ -154,7 +165,7 @@ public class MiraiRobot extends BaseRobot {
     }
 
     private SNMessageSource sendMessage(SNContact contact, SNMessageChain chain) {
-        if (bot == null || !bot.isOnline()){
+        if (bot == null || !bot.isOnline()) {
             log.warn("发送消息失败！机器人离线！");
             return null;
         }
@@ -198,7 +209,7 @@ public class MiraiRobot extends BaseRobot {
 
     @Override
     public SNFriend getFriend(long friendId) {
-        if (bot == null || !bot.isOnline()){
+        if (bot == null || !bot.isOnline()) {
             log.debug("获取好友失败，机器人离线！");
             return null;
         }
@@ -208,7 +219,7 @@ public class MiraiRobot extends BaseRobot {
 
     @Override
     public SNGroup getGroup(long groupId) {
-        if (bot == null || !bot.isOnline()){
+        if (bot == null || !bot.isOnline()) {
             log.debug("获取群组失败，机器人离线！");
             return null;
         }
@@ -218,7 +229,7 @@ public class MiraiRobot extends BaseRobot {
 
     @Override
     public SNMember getGroupMember(SNGroup group, long memberId) {
-        if (bot == null || !bot.isOnline()){
+        if (bot == null || !bot.isOnline()) {
             log.debug("获取群成员失败，机器人离线！");
             return null;
         }
@@ -227,7 +238,7 @@ public class MiraiRobot extends BaseRobot {
 
     @Override
     public SNStranger getStranger(long strangerId) {
-        if (bot == null || !bot.isOnline()){
+        if (bot == null || !bot.isOnline()) {
             log.debug("获取陌生人失败，机器人离线！");
             return null;
         }
@@ -236,7 +247,7 @@ public class MiraiRobot extends BaseRobot {
 
     @Override
     public List<SNFriend> getFriendList() {
-        if (bot == null || !bot.isOnline()){
+        if (bot == null || !bot.isOnline()) {
             log.debug("获取好友列表失败，机器人离线！");
             return null;
         }
@@ -248,7 +259,7 @@ public class MiraiRobot extends BaseRobot {
 
     @Override
     public List<SNGroup> getGroupsList() {
-        if (bot == null || !bot.isOnline()){
+        if (bot == null || !bot.isOnline()) {
             log.debug("获取群组列表失败，机器人离线！");
             return null;
         }
@@ -261,7 +272,7 @@ public class MiraiRobot extends BaseRobot {
     @Override
     @Nullable
     public List<SNMember> getGroupMembers(SNGroup group) {
-        if (bot == null || !bot.isOnline()){
+        if (bot == null || !bot.isOnline()) {
             log.debug("获取群成员列表失败，机器人离线！");
             return null;
         }
@@ -275,7 +286,7 @@ public class MiraiRobot extends BaseRobot {
 
     @Override
     public long getBotId() {
-        if (bot == null || !bot.isOnline()){
+        if (bot == null || !bot.isOnline()) {
             log.debug("获取机器人ID失败，机器人离线！");
             return 0L;
         }
@@ -284,7 +295,7 @@ public class MiraiRobot extends BaseRobot {
 
     @Override
     public SNImage uploadImg(@NotNull File file) throws IOException {
-        if (bot == null || !bot.isOnline()){
+        if (bot == null || !bot.isOnline()) {
             log.debug("无法向服务器上传图片，机器人离线！");
             return null;
         }
@@ -332,7 +343,7 @@ public class MiraiRobot extends BaseRobot {
 
     @Override
     public SNImage uploadImg(@NotNull URL url, boolean forceUpdate) throws IOException {
-        if (bot == null || !bot.isOnline()){
+        if (bot == null || !bot.isOnline()) {
             log.debug("无法向服务器上传图片，机器人离线！");
             return null;
         }
@@ -377,7 +388,7 @@ public class MiraiRobot extends BaseRobot {
 
     @Override
     public boolean recall(SNMessageSource source) {
-        if (bot == null || !bot.isOnline()){
+        if (bot == null || !bot.isOnline()) {
             log.debug("撤回消息失败，机器人离线！");
             return false;
         }
@@ -394,7 +405,7 @@ public class MiraiRobot extends BaseRobot {
 
     @Override
     public boolean mute(SNMember member, int durationSeconds) {
-        if (bot == null || !bot.isOnline()){
+        if (bot == null || !bot.isOnline()) {
             log.debug("禁言失败，机器人离线！");
             return false;
         }
@@ -412,7 +423,7 @@ public class MiraiRobot extends BaseRobot {
     @Override
     public boolean unmute(SNNormalMember member) {
         NormalMember m = converters.reverseConvert(member, NormalMember.class);
-        if (bot == null || !bot.isOnline()){
+        if (bot == null || !bot.isOnline()) {
             log.debug("解除禁言失败，机器人离线！");
             return false;
         }
@@ -428,7 +439,7 @@ public class MiraiRobot extends BaseRobot {
 
     @Override
     public void nudge(SNUser target, SNContact sendTo) {
-        if (bot == null || !bot.isOnline()){
+        if (bot == null || !bot.isOnline()) {
             log.debug("获取戳一戳失败，机器人离线！");
         }
         User user = converters.reverseConvert(target, User.class);
@@ -438,14 +449,14 @@ public class MiraiRobot extends BaseRobot {
 
     @Override
     public boolean kick(SNNormalMember member, String message, boolean block) {
-        if (bot == null || !bot.isOnline()){
+        if (bot == null || !bot.isOnline()) {
             log.debug("踢出群成员失败，机器人离线！");
             return false;
         }
         NormalMember m = converters.reverseConvert(member, NormalMember.class);
-        try{
+        try {
             m.kick(message, block);
-        } catch (Exception e){
+        } catch (Exception e) {
             log.warn("踢出群成员失败！群组：{}，目标：{}，详情请检查日志！", member.getGroup().getId(), member.getId());
             log.debug("踢出群成员失败！群组：{}，目标：{}\n", member.getGroup().getId(), member.getId(), e);
             return false;
