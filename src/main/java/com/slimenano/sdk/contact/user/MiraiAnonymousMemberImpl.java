@@ -1,7 +1,6 @@
 package com.slimenano.sdk.contact.user;
 
 import lombok.Getter;
-import com.slimenano.sdk.exceptions.NoImplementException;
 import com.slimenano.sdk.core.Robot;
 import com.slimenano.sdk.robot.contact.SNGroup;
 import com.slimenano.sdk.robot.contact.SNMemberPermission;
@@ -22,7 +21,7 @@ public class MiraiAnonymousMemberImpl extends MiraiMemberImpl implements SNAnony
 
     @Override
     public SNMessageSource sendMessage(Robot robot, SNMessageChain chain) {
-        throw new NoImplementException("不能向匿名群成员发送临时会话！");
+        throw new UnsupportedOperationException("不能向匿名群成员发送临时会话！");
     }
 
     @Override
@@ -45,6 +44,6 @@ public class MiraiAnonymousMemberImpl extends MiraiMemberImpl implements SNAnony
 
     @Override
     public void nudge(Robot robot) {
-        throw new NoImplementException("不能向匿名群成员发送戳一戳！");
+        throw new UnsupportedOperationException("不能向匿名群成员发送戳一戳！");
     }
 }

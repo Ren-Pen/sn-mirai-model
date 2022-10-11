@@ -13,6 +13,8 @@ import com.slimenano.sdk.robot.contact.user.*;
 import com.slimenano.sdk.robot.exception.InternalModelFailedException;
 import com.slimenano.sdk.robot.exception.LoginFailedException;
 import com.slimenano.sdk.robot.exception.ServerFailedException;
+import com.slimenano.sdk.robot.exception.permission.BotNoPermissionException;
+import com.slimenano.sdk.robot.exception.unsupported.UnsupportedRobotOperationException;
 import com.slimenano.sdk.robot.messages.SNMessageChain;
 import com.slimenano.sdk.robot.messages.content.SNImage;
 import com.slimenano.sdk.robot.messages.meta.SNMessageSource;
@@ -35,6 +37,7 @@ import net.mamoe.mirai.network.RetryLaterException;
 import net.mamoe.mirai.network.WrongPasswordException;
 import net.mamoe.mirai.utils.BotConfiguration;
 import net.mamoe.mirai.utils.ExternalResource;
+import net.mamoe.mirai.utils.OverFileSizeMaxException;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
@@ -87,7 +90,7 @@ public class MiraiRobot extends BaseRobot {
     }
 
     @Override
-    protected boolean getStatus() {
+    public boolean getStatus() {
         return bot != null && bot.isOnline();
     }
 
@@ -165,10 +168,6 @@ public class MiraiRobot extends BaseRobot {
     }
 
     private SNMessageSource sendMessage(SNContact contact, SNMessageChain chain) {
-        if (bot == null || !bot.isOnline()) {
-            log.warn("发送消息失败！机器人离线！");
-            return null;
-        }
         if (contact == null || chain == null) return null;
         if (contact.getId() == bot.getId()) {
             log.warn("警告，由于协议bug，暂时禁用bot发给自己消息的功能！");
@@ -181,8 +180,12 @@ public class MiraiRobot extends BaseRobot {
         try {
             return converters.convert(mc.sendMessage(messages).getSource(), SNMessageSource.class);
         } catch (Exception t) {
-            log.warn("发送消息失败！目标：{}，消息链：{}，详情请检查日志！", mc, messages);
             log.debug("发送消息失败！目标：{}，消息链：{}\n", mc, messages, t);
+            if (t instanceof MessageTooLargeException) {
+                throw new com.slimenano.sdk.robot.exception.message.MessageTooLargeException(t.getMessage());
+            } else if (t instanceof BotIsBeingMutedException) {
+                throw new BotNoPermissionException();
+            }
             return null;
         }
     }
@@ -209,48 +212,28 @@ public class MiraiRobot extends BaseRobot {
 
     @Override
     public SNFriend getFriend(long friendId) {
-        if (bot == null || !bot.isOnline()) {
-            log.debug("获取好友失败，机器人离线！");
-            return null;
-        }
         if (friendId == 0L) return null;
         return converters.convert(bot.getFriend(friendId), SNFriend.class);
     }
 
     @Override
     public SNGroup getGroup(long groupId) {
-        if (bot == null || !bot.isOnline()) {
-            log.debug("获取群组失败，机器人离线！");
-            return null;
-        }
         if (groupId == 0L) return null;
         return converters.convert(bot.getGroup(groupId), SNGroup.class);
     }
 
     @Override
     public SNMember getGroupMember(SNGroup group, long memberId) {
-        if (bot == null || !bot.isOnline()) {
-            log.debug("获取群成员失败，机器人离线！");
-            return null;
-        }
         return converters.convert(converters.reverseConvert(group, Group.class).get(memberId), SNMember.class);
     }
 
     @Override
     public SNStranger getStranger(long strangerId) {
-        if (bot == null || !bot.isOnline()) {
-            log.debug("获取陌生人失败，机器人离线！");
-            return null;
-        }
         return converters.convert(bot.getStranger(strangerId), SNStranger.class);
     }
 
     @Override
     public List<SNFriend> getFriendList() {
-        if (bot == null || !bot.isOnline()) {
-            log.debug("获取好友列表失败，机器人离线！");
-            return null;
-        }
         ContactList<Friend> friends = bot.getFriends();
         List<SNFriend> result = new ArrayList<>(friends.size());
         friends.forEach(friend -> result.add(converters.convert(friend, SNFriend.class)));
@@ -259,10 +242,6 @@ public class MiraiRobot extends BaseRobot {
 
     @Override
     public List<SNGroup> getGroupsList() {
-        if (bot == null || !bot.isOnline()) {
-            log.debug("获取群组列表失败，机器人离线！");
-            return null;
-        }
         ContactList<Group> groups = bot.getGroups();
         List<SNGroup> result = new ArrayList<>(groups.size());
         groups.forEach(group -> result.add(converters.convert(group, SNGroup.class)));
@@ -272,10 +251,6 @@ public class MiraiRobot extends BaseRobot {
     @Override
     @Nullable
     public List<SNMember> getGroupMembers(SNGroup group) {
-        if (bot == null || !bot.isOnline()) {
-            log.debug("获取群成员列表失败，机器人离线！");
-            return null;
-        }
         Group mg = converters.reverseConvert(group, Group.class);
         if (mg == null) return null;
         ContactList<NormalMember> members = mg.getMembers();
@@ -286,19 +261,11 @@ public class MiraiRobot extends BaseRobot {
 
     @Override
     public long getBotId() {
-        if (bot == null || !bot.isOnline()) {
-            log.debug("获取机器人ID失败，机器人离线！");
-            return 0L;
-        }
         return bot.getId();
     }
 
     @Override
     public SNImage uploadImg(@NotNull File file) throws IOException {
-        if (bot == null || !bot.isOnline()) {
-            log.debug("无法向服务器上传图片，机器人离线！");
-            return null;
-        }
         // 文件存在，计算md5，获取图片id
         String md5;
         String fileName = file.getName();
@@ -336,6 +303,8 @@ public class MiraiRobot extends BaseRobot {
 
             try (ExternalResource resource = ExternalResource.create(file)) {
                 return converters.convert(Contact.uploadImage(contact, resource), SNImage.class);
+            } catch (OverFileSizeMaxException e) {
+                throw new com.slimenano.sdk.robot.exception.file.OverFileSizeMaxException(e.getMessage());
             }
 
         }
@@ -343,10 +312,6 @@ public class MiraiRobot extends BaseRobot {
 
     @Override
     public SNImage uploadImg(@NotNull URL url, boolean forceUpdate) throws IOException {
-        if (bot == null || !bot.isOnline()) {
-            log.debug("无法向服务器上传图片，机器人离线！");
-            return null;
-        }
         HttpURLConnection conn = null;
         try {
             conn = (HttpURLConnection) url.openConnection();
@@ -387,81 +352,59 @@ public class MiraiRobot extends BaseRobot {
     }
 
     @Override
-    public boolean recall(SNMessageSource source) {
-        if (bot == null || !bot.isOnline()) {
-            log.debug("撤回消息失败，机器人离线！");
-            return false;
-        }
+    public void recall(SNMessageSource source) {
         try {
             MessageSource.recall(converters.reverseConvert(source, MessageSource.class));
-        } catch (Exception e) {
-            log.warn("撤回消息失败！时间戳：{}，消息链：{}，详情请检查日志！", source.getTime(), source.getOriginalMessage());
-            log.debug("撤回消息失败！时间戳：{}，消息链：{}\n", source.getTime(), source.getOriginalMessage(), e);
-            return false;
-        }
-        return true;
+        } catch (PermissionDeniedException e) {
+            log.debug("撤回消息失败，机器人没有权限！时间戳：{}，消息链：{}\n", source.getTime(), source.getOriginalMessage(), e);
+            throw new BotNoPermissionException();
 
+        }
     }
 
     @Override
-    public boolean mute(SNMember member, int durationSeconds) {
-        if (bot == null || !bot.isOnline()) {
-            log.debug("禁言失败，机器人离线！");
-            return false;
-        }
+    public void mute(SNMember member, int durationSeconds) {
         Member m = converters.reverseConvert(member, Member.class);
         try {
             m.mute(durationSeconds);
-        } catch (Exception e) {
-            log.warn("禁言失败！群组：{}，目标：{}，时间：{}，详情请检查日志！", member.getGroup().getId(), member.getId(), durationSeconds);
-            log.debug("禁言失败！群组：{}，目标：{}，时间：{}\n", member.getGroup().getId(), member.getId(), durationSeconds, e);
-            return false;
+        } catch (PermissionDeniedException e) {
+            log.debug("禁言失败，机器人没有权限！群组：{}，目标：{}，时间：{}\n", member.getGroup().getId(), member.getId(), durationSeconds, e);
+            throw new BotNoPermissionException();
         }
-        return true;
     }
 
     @Override
-    public boolean unmute(SNNormalMember member) {
+    public void unmute(SNNormalMember member) {
         NormalMember m = converters.reverseConvert(member, NormalMember.class);
-        if (bot == null || !bot.isOnline()) {
-            log.debug("解除禁言失败，机器人离线！");
-            return false;
-        }
         try {
             m.unmute();
-        } catch (Exception e) {
-            log.warn("解除禁言失败！群组：{}，目标：{}，详情请检查日志！", member.getGroup().getId(), member.getId());
-            log.debug("解除禁言失败！群组：{}，目标：{}\n", member.getGroup().getId(), member.getId(), e);
-            return false;
+        } catch (PermissionDeniedException e) {
+            log.debug("解除禁言失败，机器人没有权限！群组：{}，目标：{}\n", member.getGroup().getId(), member.getId(), e);
+            throw new BotNoPermissionException();
+
         }
-        return true;
     }
 
     @Override
     public void nudge(SNUser target, SNContact sendTo) {
-        if (bot == null || !bot.isOnline()) {
-            log.debug("获取戳一戳失败，机器人离线！");
-        }
         User user = converters.reverseConvert(target, User.class);
         Contact contact = converters.reverseConvert(sendTo, Contact.class);
-        user.nudge().sendTo(contact);
+        try {
+            user.nudge().sendTo(contact);
+        } catch (UnsupportedOperationException e) {
+            throw new UnsupportedRobotOperationException(e.getMessage());
+        }
     }
 
     @Override
-    public boolean kick(SNNormalMember member, String message, boolean block) {
-        if (bot == null || !bot.isOnline()) {
-            log.debug("踢出群成员失败，机器人离线！");
-            return false;
-        }
+    public void kick(SNNormalMember member, String message, boolean block) {
         NormalMember m = converters.reverseConvert(member, NormalMember.class);
         try {
             m.kick(message, block);
-        } catch (Exception e) {
-            log.warn("踢出群成员失败！群组：{}，目标：{}，详情请检查日志！", member.getGroup().getId(), member.getId());
-            log.debug("踢出群成员失败！群组：{}，目标：{}\n", member.getGroup().getId(), member.getId(), e);
-            return false;
+        } catch (PermissionDeniedException e) {
+            log.debug("踢出群成员失败，机器人没有权限！群组：{}，目标：{}\n", member.getGroup().getId(), member.getId(), e);
+            throw new BotNoPermissionException();
         }
-        return true;
     }
 
     @Override
