@@ -1,6 +1,6 @@
 package com.slimenano.framework.converters.mirai;
 
-import com.slimenano.sdk.framework.SystemInstance;
+import com.slimenano.nscan.framework.SystemInstance;
 import com.slimenano.sdk.framework.annotations.Mount;
 import com.slimenano.sdk.framework.ui.IGUIBridge;
 import com.slimenano.sdk.logger.Marker;
