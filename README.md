@@ -1,7 +1,13 @@
 <h1 align="center">SlimeNano</h1>
 <p align="center">MIRAI组件</p>
 
-<p align="center">mirai仓库: <a href="https://github.com/mamoe/mirai">https://github.com/mamoe/mirai</a></p>
+> <div align="center">
+>
+> mirai 仓库位置：https://github.com/mamoe/mirai
+>
+> mirai 是一个在全平台下运行，提供 QQ Android 协议支持的高效率机器人库
+>
+> </div>
 
 SlimeNano 基于slimenano-api 对 mirai 的组件支持
 
