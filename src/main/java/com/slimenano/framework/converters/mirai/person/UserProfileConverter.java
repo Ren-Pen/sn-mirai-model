@@ -3,7 +3,7 @@ package com.slimenano.framework.converters.mirai.person;
 import net.mamoe.mirai.data.UserProfile;
 import com.slimenano.sdk.contact.user.MiraiUserProfileImpl;
 import com.slimenano.framework.MiraiRobot;
-import com.slimenano.sdk.framework.converters.Converter;
+import com.slimenano.nscan.framework.converters.Converter;
 import com.slimenano.sdk.robot.contact.user.SNUserProfile;
 
 public class UserProfileConverter extends Converter<UserProfile, SNUserProfile, MiraiRobot> {

@@ -3,6 +3,9 @@ package com.slimenano.framework;
 import com.slimenano.framework.converters.mirai.MyLoginSolver;
 import com.slimenano.framework.core.BaseRobot;
 import com.slimenano.framework.event.impl.bot.LoginEvent;
+import com.slimenano.nscan.robot.exception.InternalModelFailedException;
+import com.slimenano.nscan.robot.exception.LoginFailedException;
+import com.slimenano.nscan.robot.exception.ServerFailedException;
 import com.slimenano.sdk.common.Nullable;
 import com.slimenano.sdk.event.IEvent;
 import com.slimenano.sdk.framework.annotations.Mount;
@@ -10,12 +13,11 @@ import com.slimenano.sdk.logger.Marker;
 import com.slimenano.sdk.robot.contact.SNContact;
 import com.slimenano.sdk.robot.contact.SNGroup;
 import com.slimenano.sdk.robot.contact.user.*;
-import com.slimenano.sdk.robot.exception.InternalModelFailedException;
-import com.slimenano.sdk.robot.exception.LoginFailedException;
-import com.slimenano.sdk.robot.exception.ServerFailedException;
 import com.slimenano.sdk.robot.exception.permission.BotNoPermissionException;
+import com.slimenano.sdk.robot.exception.permission.NoOperationPermissionException;
 import com.slimenano.sdk.robot.exception.unsupported.UnsupportedRobotOperationException;
 import com.slimenano.sdk.robot.messages.SNMessageChain;
+import com.slimenano.sdk.robot.messages.content.SNAudio;
 import com.slimenano.sdk.robot.messages.content.SNImage;
 import com.slimenano.sdk.robot.messages.meta.SNMessageSource;
 import kotlin.coroutines.CoroutineContext;
@@ -28,10 +30,7 @@ import net.mamoe.mirai.event.Event;
 import net.mamoe.mirai.event.EventHandler;
 import net.mamoe.mirai.event.ListeningStatus;
 import net.mamoe.mirai.event.SimpleListenerHost;
-import net.mamoe.mirai.message.data.Image;
-import net.mamoe.mirai.message.data.ImageType;
-import net.mamoe.mirai.message.data.MessageChain;
-import net.mamoe.mirai.message.data.MessageSource;
+import net.mamoe.mirai.message.data.*;
 import net.mamoe.mirai.network.NoServerAvailableException;
 import net.mamoe.mirai.network.RetryLaterException;
 import net.mamoe.mirai.network.WrongPasswordException;
@@ -141,7 +140,7 @@ public class MiraiRobot extends BaseRobot {
 
             bot.login();
         } catch (WrongPasswordException e) {
-            throw new com.slimenano.sdk.robot.exception.WrongPasswordException(e.getMessage());
+            throw new com.slimenano.nscan.robot.exception.WrongPasswordException(e.getMessage());
         } catch (NoServerAvailableException | RetryLaterException e) {
             throw new ServerFailedException(e.getMessage());
         } catch (Exception e) {
@@ -265,7 +264,7 @@ public class MiraiRobot extends BaseRobot {
     }
 
     @Override
-    public SNImage uploadImg(@NotNull File file) throws IOException {
+    public SNImage uploadImg(@NotNull SNContact contact, @NotNull File file) throws IOException {
         // 文件存在，计算md5，获取图片id
         String md5;
         String fileName = file.getName();
@@ -284,25 +283,10 @@ public class MiraiRobot extends BaseRobot {
             return converters.convert(image, SNImage.class);
         } else {
             log.debug("{} 未上传的图片ID，即将上传", imgId);
-            Contact contact = null;
-            ContactList<Friend> friends = bot.getFriends();
-            if (friends.size() != 0) {
-                contact = friends.iterator().next();
-            } else {
-                ContactList<Group> groups = bot.getGroups();
-                if (groups.size() != 0) {
-                    contact = groups.iterator().next();
-                } else {
-                    ContactList<Stranger> strangers = bot.getStrangers();
-                    if (strangers.size() != 0) {
-                        contact = strangers.iterator().next();
-                    }
-                }
-            }
-            if (contact == null) throw new IOException("No contact to upload!");
-
             try (ExternalResource resource = ExternalResource.create(file)) {
-                return converters.convert(Contact.uploadImage(contact, resource), SNImage.class);
+                Contact ct = converters.reverseConvert(contact, Contact.class);
+                Image img = Contact.uploadImage(ct, resource);
+                return converters.convert(img, SNImage.class);
             } catch (OverFileSizeMaxException e) {
                 throw new com.slimenano.sdk.robot.exception.file.OverFileSizeMaxException(e.getMessage());
             }
@@ -311,7 +295,7 @@ public class MiraiRobot extends BaseRobot {
     }
 
     @Override
-    public SNImage uploadImg(@NotNull URL url, boolean forceUpdate) throws IOException {
+    public SNImage uploadImg(@NotNull SNContact contact, @NotNull URL url, boolean forceUpdate) throws IOException {
         HttpURLConnection conn = null;
         try {
             conn = (HttpURLConnection) url.openConnection();
@@ -337,7 +321,7 @@ public class MiraiRobot extends BaseRobot {
                 IOUtils.copy(url, cacheFile);
                 log.debug("{} 图片已缓存", cacheFile);
             }
-            return uploadImg(cacheFile);
+            return uploadImg(contact, cacheFile);
 
         } finally {
             if (conn != null)
@@ -347,8 +331,61 @@ public class MiraiRobot extends BaseRobot {
     }
 
     @Override
-    public SNImage uploadImg(@NotNull URL url) throws IOException {
-        return uploadImg(url, false);
+    public SNImage uploadImg(@NotNull SNContact contact, @NotNull URL url) throws IOException {
+        return uploadImg(contact, url, false);
+    }
+
+    @Override
+    public SNAudio uploadAudio(@NotNull SNContact contact, @NotNull File file) throws IOException, UnsupportedRobotOperationException, NoOperationPermissionException, com.slimenano.sdk.robot.exception.file.OverFileSizeMaxException {
+        if (!(contact instanceof SNFriend || contact instanceof SNGroup)) {
+            throw new UnsupportedRobotOperationException();
+        }
+        try (ExternalResource resource = ExternalResource.create(file)) {
+            log.debug("{} 准备上传语音，请及时使用！", file.getName());
+            if (contact instanceof SNFriend) {
+                Friend friend = converters.reverseConvert(contact, Friend.class);
+                OfflineAudio audio = friend.uploadAudio(resource);
+                return converters.convert(audio, SNAudio.class);
+            } else {
+                Group friend = converters.reverseConvert(contact, Group.class);
+                OfflineAudio audio = friend.uploadAudio(resource);
+                return converters.convert(audio, SNAudio.class);
+            }
+        } catch (OverFileSizeMaxException e) {
+            throw new com.slimenano.sdk.robot.exception.file.OverFileSizeMaxException(e.getMessage());
+        }
+    }
+
+    @Override
+    public SNAudio uploadAudio(@NotNull SNContact contact, @NotNull URL url) throws IOException, UnsupportedRobotOperationException, NoOperationPermissionException, com.slimenano.sdk.robot.exception.file.OverFileSizeMaxException {
+        HttpURLConnection conn = null;
+        try {
+            conn = (HttpURLConnection) url.openConnection();
+            String contentType = conn.getContentType();
+            url = conn.getURL();
+            // 被缓存的文件
+            File urlDir = new File(cache + "/audio/" + url.getHost());
+            urlDir.mkdirs();
+            String fileName = FilenameUtils.getBaseName(url.getPath());
+            if (FilenameUtils.getExtension(fileName).isEmpty()) {
+                try {
+                    fileName += MimeTypes.getDefaultMimeTypes().forName(contentType).getExtension();
+                } catch (MimeTypeException e) {
+                    fileName += ".amr";
+                }
+            }
+            File cacheFile = new File(urlDir + File.separator + fileName);
+            if (!cacheFile.exists()) {
+                // 保存文件，下载需要改进，改为多线程下载
+                IOUtils.copy(url, cacheFile);
+                log.debug("{} 语音已缓存", cacheFile);
+            }
+            return uploadAudio(contact, cacheFile);
+
+        } finally {
+            if (conn != null)
+                conn.disconnect();
+        }
     }
 
     @Override

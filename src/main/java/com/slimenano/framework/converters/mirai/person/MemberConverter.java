@@ -7,7 +7,7 @@ import net.mamoe.mirai.contact.NormalMember;
 import com.slimenano.sdk.contact.user.MiraiAnonymousMemberImpl;
 import com.slimenano.sdk.contact.user.MiraiNormalMemberImpl;
 import com.slimenano.framework.MiraiRobot;
-import com.slimenano.sdk.framework.converters.Converter;
+import com.slimenano.nscan.framework.converters.Converter;
 import com.slimenano.sdk.robot.contact.SNGroup;
 import com.slimenano.sdk.robot.contact.SNMemberPermission;
 import com.slimenano.sdk.robot.contact.user.SNMember;

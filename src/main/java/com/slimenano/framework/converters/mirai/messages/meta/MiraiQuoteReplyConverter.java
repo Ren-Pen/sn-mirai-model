@@ -3,7 +3,7 @@ package com.slimenano.framework.converters.mirai.messages.meta;
 import com.slimenano.framework.MiraiRobot;
 import net.mamoe.mirai.message.data.MessageSource;
 import net.mamoe.mirai.message.data.QuoteReply;
-import com.slimenano.sdk.framework.converters.Converter;
+import com.slimenano.nscan.framework.converters.Converter;
 import com.slimenano.sdk.robot.messages.meta.SNMessageSource;
 import com.slimenano.sdk.robot.messages.meta.SNQuoteReply;
 

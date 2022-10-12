@@ -3,7 +3,7 @@ package com.slimenano.framework.converters.mirai.person;
 import net.mamoe.mirai.contact.Group;
 import com.slimenano.sdk.contact.MiraiGroupImpl;
 import com.slimenano.framework.MiraiRobot;
-import com.slimenano.sdk.framework.converters.Converter;
+import com.slimenano.nscan.framework.converters.Converter;
 import com.slimenano.sdk.robot.contact.SNGroup;
 import com.slimenano.sdk.robot.contact.SNMemberPermission;
 

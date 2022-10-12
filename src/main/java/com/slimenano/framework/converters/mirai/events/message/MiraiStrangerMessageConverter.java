@@ -2,7 +2,7 @@ package com.slimenano.framework.converters.mirai.events.message;
 
 import net.mamoe.mirai.event.events.StrangerMessageEvent;
 import com.slimenano.framework.MiraiRobot;
-import com.slimenano.sdk.framework.converters.Converter;
+import com.slimenano.nscan.framework.converters.Converter;
 import com.slimenano.sdk.robot.contact.user.SNStranger;
 import com.slimenano.sdk.robot.events.messages.SNStrangerMessageEvent;
 import com.slimenano.sdk.robot.messages.SNMessageChain;

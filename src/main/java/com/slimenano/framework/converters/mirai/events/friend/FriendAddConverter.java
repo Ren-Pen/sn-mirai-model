@@ -2,7 +2,7 @@ package com.slimenano.framework.converters.mirai.events.friend;
 
 import net.mamoe.mirai.event.events.FriendAddEvent;
 import com.slimenano.framework.MiraiRobot;
-import com.slimenano.sdk.framework.converters.Converter;
+import com.slimenano.nscan.framework.converters.Converter;
 import com.slimenano.sdk.robot.contact.user.SNFriend;
 import com.slimenano.sdk.robot.events.friend.SNFriendAddEvent;
 

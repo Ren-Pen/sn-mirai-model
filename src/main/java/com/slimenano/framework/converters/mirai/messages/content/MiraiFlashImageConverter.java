@@ -3,7 +3,7 @@ package com.slimenano.framework.converters.mirai.messages.content;
 import net.mamoe.mirai.message.data.FlashImage;
 import net.mamoe.mirai.message.data.Image;
 import com.slimenano.framework.MiraiRobot;
-import com.slimenano.sdk.framework.converters.Converter;
+import com.slimenano.nscan.framework.converters.Converter;
 import com.slimenano.sdk.robot.messages.content.SNFlashImage;
 import com.slimenano.sdk.robot.messages.content.SNImage;
 

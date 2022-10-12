@@ -2,7 +2,7 @@ package com.slimenano.framework.converters.mirai.events.bot;
 
 import net.mamoe.mirai.event.events.NudgeEvent;
 import com.slimenano.framework.MiraiRobot;
-import com.slimenano.sdk.framework.converters.Converter;
+import com.slimenano.nscan.framework.converters.Converter;
 import com.slimenano.sdk.robot.contact.SNContact;
 import com.slimenano.sdk.robot.events.bot.SNNudgeEvent;
 

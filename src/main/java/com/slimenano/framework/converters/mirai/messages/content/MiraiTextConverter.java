@@ -2,7 +2,7 @@ package com.slimenano.framework.converters.mirai.messages.content;
 
 import net.mamoe.mirai.message.data.PlainText;
 import com.slimenano.framework.MiraiRobot;
-import com.slimenano.sdk.framework.converters.Converter;
+import com.slimenano.nscan.framework.converters.Converter;
 import com.slimenano.sdk.robot.messages.content.SNText;
 
 public class MiraiTextConverter extends Converter<PlainText, SNText, MiraiRobot> {

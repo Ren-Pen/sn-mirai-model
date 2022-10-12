@@ -1,11 +1,19 @@
 package com.slimenano.sdk.contact.user;
 
+import com.slimenano.sdk.robot.exception.file.OverFileSizeMaxException;
+import com.slimenano.sdk.robot.exception.permission.NoOperationPermissionException;
+import com.slimenano.sdk.robot.exception.unsupported.UnsupportedRobotOperationException;
+import com.slimenano.sdk.robot.messages.content.SNAudio;
 import lombok.Getter;
 import com.slimenano.sdk.core.Robot;
 import com.slimenano.sdk.robot.contact.user.SNFriend;
 import com.slimenano.sdk.robot.contact.user.SNUserProfile;
 import com.slimenano.sdk.robot.messages.SNMessageChain;
 import com.slimenano.sdk.robot.messages.meta.SNMessageSource;
+
+import java.io.File;
+import java.io.IOException;
+import java.net.URL;
 
 @Getter
 public class MiraiFriendImpl extends MiraiUserImpl implements SNFriend {
@@ -38,5 +46,15 @@ public class MiraiFriendImpl extends MiraiUserImpl implements SNFriend {
     @Override
     public void nudge(Robot robot) {
         robot.nudge(this, this);
+    }
+
+    @Override
+    public SNAudio uploadAudio(Robot robot, File file) throws IOException, UnsupportedRobotOperationException, NoOperationPermissionException, OverFileSizeMaxException {
+        return robot.uploadAudio(this, file);
+    }
+
+    @Override
+    public SNAudio uploadAudio(Robot robot, URL url) throws IOException, UnsupportedRobotOperationException, NoOperationPermissionException, OverFileSizeMaxException {
+        return robot.uploadAudio(this, url);
     }
 }
